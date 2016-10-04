@@ -222,9 +222,8 @@ import pandas
 # load options from the config file
 import CGATPipelines.Pipeline as P
 
-P.getParameters(["pipeline.ini",
-                 "%s/pipeline.ini" % os.path.splitext(__file__)[0], ])
-
+P.getParameters(["%s/pipeline.ini" % os.path.splitext(__file__)[0],
+                 "pipeline.ini",])
 
 PARAMS = P.PARAMS
 
@@ -767,13 +766,15 @@ def runLCA(infile, outfile):
     gi2taxid = PARAMS.get("megan_gi2taxid")
     outf_tax = P.snip(outfile, ".gz")
     options = PARAMS.get("lca_options")
-    statement = '''lcamapper.sh
+
+    statement = '''xvfb-run blast2lca
                    -i %(infile)s
-                   -f Detect
+                   -f BlastTab
                     %(options)s
-                   -gt %(gi2taxid)s
+                   -g2t %(gi2taxid)s
                    -o %(outf_tax)s > %(outfile)s.log
-                   ; cat %(outf_tax)s
+                   ; checkpoint;
+                  cat %(outf_tax)s
                   %(filter_stmt)s
                   | gzip > %(outfile)s
                   ; checkpoint
