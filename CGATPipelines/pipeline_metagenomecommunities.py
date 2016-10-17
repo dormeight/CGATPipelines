@@ -726,16 +726,17 @@ def runDiamondOnRawSequences(infile, outfile):
     statement = '''zcat %(infile)s > %(temp)s.fastq;
                    checkpoint;
                    diamond blastx
+                   -v                   
                    --db %(db)s
                    --query %(temp)s.fastq
-                   --daa %(temp)s.daa
+                   --out %(outfile)s
+                   --compress 1
                    --threads %(job_threads)s
-                   --log
+                   --outfmt 6
                    %(diamond_options)s
                    &> %(outfile)s.log;
-                   diamond view -a %(temp)s.daa | gzip > %(outfile)s;
                    checkpoint;
-                   rm -rf %(temp)s %(temp)s.fastq %(temp)s.daa
+                   rm -rf %(temp)s %(temp)s.fastq
                 '''
     P.run()
 
@@ -767,7 +768,7 @@ def runLCA(infile, outfile):
     outf_tax = P.snip(outfile, ".gz")
     options = PARAMS.get("lca_options")
 
-    statement = '''xvfb-run blast2lca
+    statement = '''xvfb-run -d blast2lca
                    -i %(infile)s
                    -f BlastTab
                     %(options)s
@@ -795,6 +796,7 @@ def buildTaxaMap(infile, outfile):
     each lca file - allows to map clades in downstream
     analysis
     '''
+    job_memory = PARAMS.get("lca_map_memory")
     statement = '''zcat %(infile)s
                    | python %(scriptsdir)s/lca2table.py
                    --output-map
